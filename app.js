@@ -3,7 +3,7 @@
 
   const COLUMNS = [
     "New / Reviewing Teaser",
-    "NDA Sent",
+    "NDA Signed",
     "CIM Received",
     "Management Call Scheduled",
     "In Due Diligence",
@@ -40,8 +40,12 @@
 
   function getStage(deal) {
     const id = deal["Deal ID"];
-    if (stageOverrides[id]) return stageOverrides[id];
-    const stage = deal["Current Kanban Stage"] || "Backlog";
+    let stage = stageOverrides[id] || deal["Current Kanban Stage"] || "Backlog";
+    if (stage === "NDA Sent") stage = "NDA Signed"; // renamed column
+    if (stageOverrides[id] === "NDA Sent") {
+      stageOverrides[id] = "NDA Signed";
+      saveOverrides();
+    }
     return COLUMNS.includes(stage) ? stage : "Backlog";
   }
 
@@ -177,13 +181,11 @@
     const el = document.createElement("article");
     const tier = deal["Priority Tier"] || "Backlog";
     const waiting = deal["Waiting On"] || "";
-    const waitingClass = waiting.toLowerCase() === "me" ? "waiting-me" : "waiting-other";
     const link = docLink(deal);
     const due = deal["Next Action Due Date"];
     const overdue = isOverdue(due);
     const ebitda = deal["EBITDA"] ?? deal["Adjusted EBITDA"];
     const sde = deal["SDE"];
-    const prio = priorityPill(tier);
 
     el.className = `card ${priorityClass(tier)}`;
     el.dataset.dealId = deal["Deal ID"];
@@ -205,20 +207,18 @@
       ? `<div class="metric"><span class="label">EBITDA</span><span class="value">${fmtMoney(ebitda)}</span></div>`
       : "";
 
-    const prioHtml = prio
-      ? `<span class="pill ${prio.cls}">${escapeHtml(prio.label)}</span>`
-      : "";
+    const moneyLabel = hasEbitda ? "EBITDA" : "SDE";
+    const moneyVal = hasEbitda ? fmtMoney(ebitda) : fmtMoney(sde);
+    const brokerName = (deal["Broker Name"] || "").trim() || "—";
+    const state = (deal["State"] || "").trim() || "—";
 
     el.innerHTML = `
       <h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3>
       <div class="pill-row">
-        ${prioHtml}
-        <span class="pill category">${escapeHtml(deal["Deal Category"] || "—")}</span>
-        <span class="pill ${waitingClass}" title="Waiting On">${waiting.toLowerCase() === "me" ? "Waiting · Me" : "Waiting · " + escapeHtml(waiting || "—")}</span>
-      </div>
-      <div class="card-row">
-        <span class="label">State</span>
-        <span class="value">${escapeHtml(deal["State"] || "—")}</span>
+        <span class="pill fact state" title="State">${escapeHtml(state)}</span>
+        <span class="pill fact money" title="Revenue">Rev ${fmtMoney(deal["Revenue"])}</span>
+        <span class="pill fact money" title="${moneyLabel}">${escapeHtml(moneyLabel)} ${moneyVal}</span>
+        <span class="pill fact broker" title="Broker">${escapeHtml(brokerName)}</span>
       </div>
       <div class="${metricsClass}">
         <div class="metric">
@@ -230,10 +230,6 @@
           <span class="value">${fmtMoney(sde)}</span>
         </div>
         ${ebitdaMetric}
-      </div>
-      <div class="card-row">
-        <span class="label">Broker</span>
-        <span class="value muted">${escapeHtml(brokerLine(deal))}</span>
       </div>
       <div class="card-row">
         <span class="label">Sub-label</span>

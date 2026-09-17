@@ -38,7 +38,7 @@ Relative asset paths (`styles.css`, `app.js`, `deals.json`, `favicon.svg`) work 
 ## Columns (11)
 
 1. New / Reviewing Teaser  
-2. NDA Sent  
+2. NDA Signed  
 3. CIM Received  
 4. Management Call Scheduled  
 5. In Due Diligence  

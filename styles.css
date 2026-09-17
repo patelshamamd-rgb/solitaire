@@ -672,6 +672,36 @@ body {
   text-transform: none;
 }
 
+.pill.fact {
+  color: var(--text-primary);
+  background: var(--bg-inset);
+  border-color: var(--border);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pill.fact.state {
+  min-width: 2.2rem;
+  justify-content: center;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.pill.fact.money {
+  color: var(--text-primary);
+}
+
+.pill.fact.broker {
+  font-weight: 500;
+  color: var(--text-muted);
+  max-width: 11rem;
+}
+
 .pill.prio-interested {
   color: #8a6e28;
   background: rgba(196, 160, 74, 0.14);
