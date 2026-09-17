@@ -149,10 +149,20 @@
 
   function brokerLine(deal) {
     const name = deal["Broker Name"] || "—";
-    const bits = [];
-    if (deal["Broker Email"]) bits.push(deal["Broker Email"]);
-    if (deal["Broker Phone"]) bits.push(deal["Broker Phone"]);
-    return bits.length ? `${name} · ${bits.join(" · ")}` : name;
+    if (deal["Broker Phone"]) return `${name} · ${deal["Broker Phone"]}`;
+    return name;
+  }
+
+  /** Priority pill label — never show Hot (product preference). */
+  function priorityPill(tier) {
+    const t = (tier || "").trim();
+    const lower = t.toLowerCase();
+    if (lower === "hot" || !t) return null;
+    if (lower === "interested") return { label: "Interested", cls: "prio-interested" };
+    if (lower === "borderline") return { label: "Borderline", cls: "prio-borderline" };
+    if (lower === "backlog") return { label: "Backlog", cls: "prio-backlog" };
+    // Unknown non-Hot tiers still show as backlog-styled text
+    return { label: t, cls: "prio-backlog" };
   }
 
   function escapeHtml(str) {
@@ -173,6 +183,7 @@
     const overdue = isOverdue(due);
     const ebitda = deal["EBITDA"] ?? deal["Adjusted EBITDA"];
     const sde = deal["SDE"];
+    const prio = priorityPill(tier);
 
     el.className = `card ${priorityClass(tier)}`;
     el.dataset.dealId = deal["Deal ID"];
@@ -187,9 +198,21 @@
       ? `<a class="card-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">↗ ${escapeHtml(link.label)}</a>`
       : `<span class="card-row"><span class="label">Docs</span><span class="value muted">None</span></span>`;
 
+    // Always 2-col Revenue | SDE; EBITDA as 3rd column when present (never collapse SDE)
+    const hasEbitda = ebitda != null && ebitda !== "";
+    const metricsClass = hasEbitda ? "card-metrics metrics-3" : "card-metrics";
+    const ebitdaMetric = hasEbitda
+      ? `<div class="metric"><span class="label">EBITDA</span><span class="value">${fmtMoney(ebitda)}</span></div>`
+      : "";
+
+    const prioHtml = prio
+      ? `<span class="pill ${prio.cls}">${escapeHtml(prio.label)}</span>`
+      : "";
+
     el.innerHTML = `
       <h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3>
       <div class="pill-row">
+        ${prioHtml}
         <span class="pill category">${escapeHtml(deal["Deal Category"] || "—")}</span>
         <span class="pill ${waitingClass}" title="Waiting On">${waiting.toLowerCase() === "me" ? "Waiting · Me" : "Waiting · " + escapeHtml(waiting || "—")}</span>
       </div>
@@ -197,24 +220,16 @@
         <span class="label">State</span>
         <span class="value">${escapeHtml(deal["State"] || "—")}</span>
       </div>
-      <div class="card-metrics">
+      <div class="${metricsClass}">
         <div class="metric">
           <span class="label">Revenue</span>
           <span class="value">${fmtMoney(deal["Revenue"])}</span>
         </div>
         <div class="metric">
-          <span class="label">${ebitda != null ? "EBITDA" : "SDE"}</span>
-          <span class="value">${ebitda != null ? fmtMoney(ebitda) : fmtMoney(sde)}</span>
+          <span class="label">SDE</span>
+          <span class="value">${fmtMoney(sde)}</span>
         </div>
-        ${
-          ebitda != null && sde != null
-            ? `<div class="metric"><span class="label">SDE</span><span class="value">${fmtMoney(sde)}</span></div>`
-            : ebitda == null && sde == null
-              ? `<div class="metric"><span class="label">EBITDA / SDE</span><span class="value">—</span></div>`
-              : ebitda != null
-                ? `<div class="metric"><span class="label">SDE</span><span class="value">${fmtMoney(sde)}</span></div>`
-                : ""
-        }
+        ${ebitdaMetric}
       </div>
       <div class="card-row">
         <span class="label">Broker</span>
