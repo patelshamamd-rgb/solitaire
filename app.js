@@ -205,9 +205,6 @@
     el.dataset.assigned = deal["Assigned To"] || "";
     el.setAttribute("role", "listitem");
 
-    const listingHtml = listing
-      ? `<a class="card-link listing" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">↗ Open listing</a>`
-      : `<span class="card-row"><span class="label">Listing</span><span class="value muted">No link on file</span></span>`;
     const driveHtml = drive
       ? `<a class="card-link drive" href="${escapeHtml(drive)}" target="_blank" rel="noopener noreferrer">↗ Drive folder</a>`
       : "";
@@ -224,8 +221,20 @@
     const brokerName = (deal["Broker Name"] || "").trim() || "—";
     const state = (deal["State"] || "").trim() || "—";
 
+    const titleHtml = listing
+      ? `<a class="card-name-link" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer"><h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3></a>`
+      : `<h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3>`;
+
+    const openListingBtn = listing
+      ? `<a class="btn-listing" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">Open listing ↗</a>`
+      : `<span class="btn-listing disabled">No listing link</span>`;
+
     el.innerHTML = `
-      <h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3>
+      <div class="card-top">
+        <button type="button" class="card-drag" aria-label="Drag to move" title="Drag to move">⋮⋮</button>
+        ${titleHtml}
+      </div>
+      ${openListingBtn}
       <div class="pill-row">
         <span class="pill fact state" title="State">${escapeHtml(state)}</span>
         <span class="pill fact money" title="Revenue">Rev ${fmtMoney(deal["Revenue"])}</span>
@@ -251,7 +260,6 @@
         <span class="label">Last action</span>
         <span class="value muted">${escapeHtml(deal["Last Action"] || "—")} · ${fmtShortDate(deal["Last Action Date"])}</span>
       </div>
-      ${listingHtml}
       ${driveHtml}
       <div class="card-row">
         <span class="label">Next</span>
@@ -263,30 +271,6 @@
       </div>
       <div class="card-id">${escapeHtml(deal["Deal ID"])}</div>
     `;
-
-    // Click opens original listing (drag still moves the card)
-    if (listing) {
-      el.dataset.listingUrl = listing;
-      el.classList.add("has-listing");
-      el.title = "Click to open listing · drag to move";
-      let downX = 0;
-      let downY = 0;
-      let dragging = false;
-      el.addEventListener("pointerdown", (e) => {
-        if (e.button !== 0) return;
-        downX = e.clientX;
-        downY = e.clientY;
-        dragging = false;
-      });
-      el.addEventListener("pointermove", (e) => {
-        if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) dragging = true;
-      });
-      el.addEventListener("click", (e) => {
-        if (e.target.closest("a")) return; // link handles itself
-        if (dragging) return;
-        window.open(listing, "_blank", "noopener,noreferrer");
-      });
-    }
 
     return el;
   }
@@ -445,8 +429,10 @@
         ghostClass: "sortable-ghost",
         chosenClass: "sortable-chosen",
         draggable: ".card",
-        filter: "a,button,select",
+        handle: ".card-drag",
+        filter: "a,select",
         preventOnFilter: false,
+        delay: 0,
         onAdd(evt) {
           const card = evt.item;
           const stage = evt.to.dataset.stage;
