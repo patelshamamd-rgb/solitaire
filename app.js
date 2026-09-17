@@ -222,18 +222,15 @@
     const state = (deal["State"] || "").trim() || "—";
 
     const titleHtml = listing
-      ? `<a class="card-name-link" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer"><h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3></a>`
+      ? `<a class="card-name-link" href="${escapeHtml(listing)}" data-listing-url="${escapeHtml(listing)}"><h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3></a>`
       : `<h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3>`;
 
     const openListingBtn = listing
-      ? `<a class="btn-listing" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">Open listing ↗</a>`
+      ? `<a class="btn-listing" href="${escapeHtml(listing)}" data-listing-url="${escapeHtml(listing)}">Open listing ↗</a>`
       : `<span class="btn-listing disabled">No listing link</span>`;
 
     el.innerHTML = `
-      <div class="card-top">
-        <button type="button" class="card-drag" aria-label="Drag to move" title="Drag to move">⋮⋮</button>
-        ${titleHtml}
-      </div>
+      ${titleHtml}
       ${openListingBtn}
       <div class="pill-row">
         <span class="pill fact state" title="State">${escapeHtml(state)}</span>
@@ -271,6 +268,19 @@
       </div>
       <div class="card-id">${escapeHtml(deal["Deal ID"])}</div>
     `;
+
+    el.querySelectorAll("[data-listing-url]").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        const url = a.getAttribute("data-listing-url") || a.getAttribute("href");
+        if (!url) return;
+        e.preventDefault();
+        const win = window.open(url, "_blank", "noopener,noreferrer");
+        if (!win) {
+          // Popup blocked (common in embedded browsers) — go same tab
+          window.location.assign(url);
+        }
+      });
+    });
 
     return el;
   }
@@ -416,39 +426,12 @@
 
     $("#deal-count").textContent = `${deals.length} deals`;
     applyFilters();
-    initSortables();
   }
 
   function initSortables() {
-    document.querySelectorAll(".column-cards").forEach((list) => {
-      // eslint-disable-next-line no-undef
-      Sortable.create(list, {
-        group: "solitaire-deals",
-        animation: 160,
-        easing: "cubic-bezier(0.2, 0, 0, 1)",
-        ghostClass: "sortable-ghost",
-        chosenClass: "sortable-chosen",
-        draggable: ".card",
-        handle: ".card-drag",
-        filter: "a,select",
-        preventOnFilter: false,
-        delay: 0,
-        onAdd(evt) {
-          const card = evt.item;
-          const stage = evt.to.dataset.stage;
-          const id = card.dataset.dealId;
-          if (id && stage) {
-            setStage(id, stage);
-            updateBanner();
-            updateColumnCounts();
-          }
-        },
-        onUpdate() {
-          updateColumnCounts();
-        },
-      });
-    });
+    /* Drag temporarily disabled — Sortable was intercepting listing clicks. */
   }
+
 
   function wireFilters() {
     ["#filter-priority", "#filter-category", "#filter-state", "#filter-waiting", "#filter-assigned"].forEach(
