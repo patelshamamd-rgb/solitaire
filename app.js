@@ -15,43 +15,150 @@
     "Ping Later",
   ];
 
-  const STORAGE_KEY = "solitaire-kanban-stages-v1";
+  const STORAGE_KEY = "solitaire-workspace-v2";
+  const LEGACY_STAGES_KEY = "solitaire-kanban-stages-v1";
   const MS_DAY = 86400000;
+  const SAVE_DEBOUNCE_MS = 300;
 
   /** @type {object[]} */
   let deals = [];
-  /** @type {Record<string, string>} */
-  let stageOverrides = {};
+  /** @type {{ stages: Record<string,string>, notes: Record<string,string>, nextAction: Record<string,string>, nextDue: Record<string,string>, listingUrl: Record<string,string> }} */
+  let overrides = emptyOverrides();
+  /** @type {string|null} */
+  let openDealId = null;
+  let saveTimer = null;
 
   const $ = (sel) => document.querySelector(sel);
+
+  function emptyOverrides() {
+    return { stages: {}, notes: {}, nextAction: {}, nextDue: {}, listingUrl: {} };
+  }
+
+  function hasAnyOverrides() {
+    return (
+      Object.keys(overrides.stages).length > 0 ||
+      Object.keys(overrides.notes).length > 0 ||
+      Object.keys(overrides.nextAction).length > 0 ||
+      Object.keys(overrides.nextDue).length > 0 ||
+      Object.keys(overrides.listingUrl).length > 0
+    );
+  }
+
+  function migrateLegacyStages(into) {
+    try {
+      const raw = localStorage.getItem(LEGACY_STAGES_KEY);
+      if (!raw) return;
+      const legacy = JSON.parse(raw);
+      if (!legacy || typeof legacy !== "object") return;
+      Object.entries(legacy).forEach(([id, stage]) => {
+        if (into.stages[id]) return;
+        let s = stage;
+        if (s === "NDA Sent") s = "NDA Signed";
+        into.stages[id] = s;
+      });
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function normalizeStage(stage) {
+    if (stage === "NDA Sent") return "NDA Signed";
+    return COLUMNS.includes(stage) ? stage : "Backlog";
+  }
 
   function loadOverrides() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      stageOverrides = raw ? JSON.parse(raw) : {};
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        overrides = {
+          stages: parsed.stages || {},
+          notes: parsed.notes || {},
+          nextAction: parsed.nextAction || {},
+          nextDue: parsed.nextDue || {},
+          listingUrl: parsed.listingUrl || {},
+        };
+      } else {
+        overrides = emptyOverrides();
+      }
     } catch {
-      stageOverrides = {};
+      overrides = emptyOverrides();
     }
+    migrateLegacyStages(overrides);
+    // Normalize any legacy NDA Sent in stages
+    Object.keys(overrides.stages).forEach((id) => {
+      if (overrides.stages[id] === "NDA Sent") overrides.stages[id] = "NDA Signed";
+    });
+    persistOverrides(false);
   }
 
-  function saveOverrides() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stageOverrides));
+  function persistOverrides(updateChip = true) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+    if (updateChip) updateSavedChip();
+  }
+
+  function updateSavedChip() {
+    const chip = $("#saved-chip");
+    if (!chip) return;
+    chip.hidden = !hasAnyOverrides();
   }
 
   function getStage(deal) {
     const id = deal["Deal ID"];
-    let stage = stageOverrides[id] || deal["Current Kanban Stage"] || "Backlog";
-    if (stage === "NDA Sent") stage = "NDA Signed"; // renamed column
-    if (stageOverrides[id] === "NDA Sent") {
-      stageOverrides[id] = "NDA Signed";
-      saveOverrides();
-    }
-    return COLUMNS.includes(stage) ? stage : "Backlog";
+    const stage = overrides.stages[id] || deal["Current Kanban Stage"] || "Backlog";
+    return normalizeStage(stage);
   }
 
   function setStage(dealId, stage) {
-    stageOverrides[dealId] = stage;
-    saveOverrides();
+    overrides.stages[dealId] = normalizeStage(stage);
+    persistOverrides();
+  }
+
+  function getNotes(deal) {
+    const id = deal["Deal ID"];
+    if (Object.prototype.hasOwnProperty.call(overrides.notes, id)) return overrides.notes[id];
+    return deal["Most Recent Note"] || deal["Full Notes Log"] || "";
+  }
+
+  function getNextAction(deal) {
+    const id = deal["Deal ID"];
+    if (Object.prototype.hasOwnProperty.call(overrides.nextAction, id)) return overrides.nextAction[id];
+    return deal["Next Action"] || "";
+  }
+
+  function getNextDue(deal) {
+    const id = deal["Deal ID"];
+    if (Object.prototype.hasOwnProperty.call(overrides.nextDue, id)) return overrides.nextDue[id];
+    const raw = deal["Next Action Due Date"] || "";
+    if (!raw) return "";
+    // Normalize to YYYY-MM-DD for date inputs
+    const d = parseDate(raw);
+    if (!d) return "";
+    return d.toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+  }
+
+  function firstHttp(val) {
+    if (!val) return null;
+    const first = String(val)
+      .split(/[\s,]+/)
+      .find((s) => /^https?:\/\//i.test(s));
+    return first || null;
+  }
+
+  /** Listing URL: override → Searcher OS Deal Link → first http in Source Document Links */
+  function listingUrl(deal) {
+    const id = deal["Deal ID"];
+    const fromOverride = overrides.listingUrl[id];
+    if (fromOverride) return firstHttp(fromOverride) || fromOverride;
+    return (
+      firstHttp(deal["Searcher OS Deal Link"]) ||
+      firstHttp(deal["Source Document Links"]) ||
+      null
+    );
+  }
+
+  function driveUrl(deal) {
+    return firstHttp(deal["CIM Google Drive Link"]) || firstHttp(deal["Drive Folder Link"]) || null;
   }
 
   function fmtMoney(n) {
@@ -86,7 +193,6 @@
 
   function startOfToday() {
     const now = new Date();
-    // Compare calendar days in America/New_York
     const parts = new Intl.DateTimeFormat("en-US", {
       timeZone: "America/New_York",
       year: "numeric",
@@ -109,7 +215,6 @@
     return Math.floor((today - then) / MS_DAY);
   }
 
-  /** Days since last touch: prefer Days Since Last Touch, else Last Contact, else Last Action Date */
   function daysSinceTouch(deal) {
     const explicit = deal["Days Since Last Touch"];
     if (explicit != null && explicit !== "" && !Number.isNaN(Number(explicit))) {
@@ -138,45 +243,6 @@
     return "prio-backlog";
   }
 
-  function firstHttp(val) {
-    if (!val) return null;
-    const first = String(val)
-      .split(/[\s,]+/)
-      .find((s) => /^https?:\/\//i.test(s));
-    return first || null;
-  }
-
-  /** Original marketplace / broker listing (BizBuySell, etc.) */
-  function listingUrl(deal) {
-    return (
-      firstHttp(deal["Searcher OS Deal Link"]) ||
-      firstHttp(deal["Source Document Links"]) ||
-      null
-    );
-  }
-
-  function driveUrl(deal) {
-    return firstHttp(deal["CIM Google Drive Link"]) || firstHttp(deal["Drive Folder Link"]) || null;
-  }
-
-  function brokerLine(deal) {
-    const name = deal["Broker Name"] || "—";
-    if (deal["Broker Phone"]) return `${name} · ${deal["Broker Phone"]}`;
-    return name;
-  }
-
-  /** Priority pill label — never show Hot (product preference). */
-  function priorityPill(tier) {
-    const t = (tier || "").trim();
-    const lower = t.toLowerCase();
-    if (lower === "hot" || !t) return null;
-    if (lower === "interested") return { label: "Interested", cls: "prio-interested" };
-    if (lower === "borderline") return { label: "Borderline", cls: "prio-borderline" };
-    if (lower === "backlog") return { label: "Backlog", cls: "prio-backlog" };
-    // Unknown non-Hot tiers still show as backlog-styled text
-    return { label: t, cls: "prio-backlog" };
-  }
-
   function escapeHtml(str) {
     return String(str ?? "")
       .replace(/&/g, "&amp;")
@@ -185,16 +251,41 @@
       .replace(/"/g, "&quot;");
   }
 
+  function findDeal(id) {
+    return deals.find((d) => d["Deal ID"] === id) || null;
+  }
+
+  function moneyFacts(deal) {
+    const ebitda = deal["EBITDA"] ?? deal["Adjusted EBITDA"];
+    const sde = deal["SDE"];
+    const hasEbitda = ebitda != null && ebitda !== "";
+    return {
+      moneyLabel: hasEbitda ? "EBITDA" : "SDE",
+      moneyVal: hasEbitda ? fmtMoney(ebitda) : fmtMoney(sde),
+    };
+  }
+
+  function copyText(text) {
+    if (!text) return Promise.resolve(false);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
+    }
+    return Promise.resolve(false);
+  }
+
   function createCard(deal) {
     const el = document.createElement("article");
     const tier = deal["Priority Tier"] || "Backlog";
     const waiting = deal["Waiting On"] || "";
     const listing = listingUrl(deal);
     const drive = driveUrl(deal);
-    const due = deal["Next Action Due Date"];
+    const nextAction = getNextAction(deal);
+    const due = getNextDue(deal);
     const overdue = isOverdue(due);
-    const ebitda = deal["EBITDA"] ?? deal["Adjusted EBITDA"];
-    const sde = deal["SDE"];
+    const { moneyLabel, moneyVal } = moneyFacts(deal);
+    const brokerName = (deal["Broker Name"] || "").trim() || "—";
+    const brokerPhone = (deal["Broker Phone"] || "").trim();
+    const state = (deal["State"] || "").trim() || "—";
 
     el.className = `card ${priorityClass(tier)}`;
     el.dataset.dealId = deal["Deal ID"];
@@ -202,35 +293,43 @@
     el.dataset.category = deal["Deal Category"] || "";
     el.dataset.state = deal["State"] || "";
     el.dataset.waiting = waiting;
-    el.dataset.assigned = deal["Assigned To"] || "";
     el.setAttribute("role", "listitem");
+    el.tabIndex = 0;
 
     const driveHtml = drive
       ? `<a class="card-link drive" href="${escapeHtml(drive)}" target="_blank" rel="noopener noreferrer">↗ Drive folder</a>`
       : "";
 
-    const hasEbitda = ebitda != null && ebitda !== "";
-    const moneyLabel = hasEbitda ? "EBITDA" : "SDE";
-    const moneyVal = hasEbitda ? fmtMoney(ebitda) : fmtMoney(sde);
-    const brokerName = (deal["Broker Name"] || "").trim() || "—";
-    const state = (deal["State"] || "").trim() || "—";
+    const titleHtml = `<h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3>`;
 
-    const titleHtml = listing
-      ? `<h3 class="card-name"><a class="card-name-link" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">${escapeHtml(deal["Practice Name"] || "Untitled")}</a></h3>`
-      : `<h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3>`;
-
-    const openListingBtn = listing
-      ? `<a class="btn-listing" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">Open listing ↗</a>`
-      : `<span class="btn-listing disabled">No listing link</span>`;
+    let listingBlock;
+    if (listing) {
+      listingBlock = `
+        <div class="listing-row">
+          <a class="btn-listing" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">Open listing ↗</a>
+          <button type="button" class="btn-copy-link" data-copy="${escapeHtml(listing)}" title="Copy listing link">Copy link</button>
+        </div>`;
+    } else {
+      const phoneLine = brokerPhone ? `<div class="broker-phone-big">${escapeHtml(brokerPhone)}</div>` : "";
+      listingBlock = `
+        <div class="broker-missing">
+          <div class="broker-missing-label">No listing link — call broker</div>
+          <div class="broker-name-big">${escapeHtml(brokerName)}</div>
+          ${phoneLine}
+        </div>`;
+    }
 
     el.innerHTML = `
-      ${titleHtml}
-      ${openListingBtn}
+      <div class="card-top">
+        <button type="button" class="card-drag" aria-label="Drag to move stage" title="Drag to move">⋮⋮</button>
+        ${titleHtml}
+      </div>
+      ${listingBlock}
       <div class="fact-grid">
         <div class="fact-cell"><span class="fact-label">State</span><span class="fact-value">${escapeHtml(state)}</span></div>
         <div class="fact-cell"><span class="fact-label">Revenue</span><span class="fact-value">${fmtMoney(deal["Revenue"])}</span></div>
         <div class="fact-cell"><span class="fact-label">${escapeHtml(moneyLabel)}</span><span class="fact-value">${moneyVal}</span></div>
-        <div class="fact-cell"><span class="fact-label">Broker</span><span class="fact-value">${escapeHtml(brokerName)}</span></div>
+        <div class="fact-cell"><span class="fact-label">Broker</span><span class="fact-value">${escapeHtml(brokerName)}${brokerPhone ? " · " + escapeHtml(brokerPhone) : ""}</span></div>
       </div>
       <div class="card-row">
         <span class="label">Sub-label</span>
@@ -243,15 +342,46 @@
       ${driveHtml}
       <div class="card-row">
         <span class="label">Next</span>
-        <span class="value ${overdue ? "overdue" : ""}">${escapeHtml(deal["Next Action"] || "—")}${due ? " · due " + fmtShortDate(due) : ""}${overdue ? " · Overdue" : ""}</span>
-      </div>
-      <div class="card-row">
-        <span class="label">Assigned</span>
-        <span class="value">${escapeHtml(deal["Assigned To"] || "—")}</span>
+        <span class="value ${overdue ? "overdue" : ""}">${escapeHtml(nextAction || "—")}${due ? " · due " + fmtShortDate(due) : ""}${overdue ? " · Overdue" : ""}</span>
       </div>
       <div class="card-id">${escapeHtml(deal["Deal ID"])}</div>
     `;
 
+    // Copy link — stop so card click doesn't open drawer
+    el.querySelectorAll(".btn-copy-link").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const url = btn.getAttribute("data-copy");
+        copyText(url).then((ok) => {
+          const prev = btn.textContent;
+          btn.textContent = ok ? "Copied" : "Copy failed";
+          setTimeout(() => {
+            btn.textContent = prev;
+          }, 1200);
+        });
+      });
+    });
+
+    // Plain anchors must not be hijacked — stopPropagation only so drawer doesn't open
+    el.querySelectorAll("a").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+    });
+
+    el.addEventListener("click", (e) => {
+      if (e.target.closest(".card-drag")) return;
+      if (e.target.closest("a")) return;
+      if (e.target.closest(".btn-copy-link")) return;
+      openDrawer(deal["Deal ID"]);
+    });
+
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        if (e.target.closest("a,button,input,textarea,select")) return;
+        openDrawer(deal["Deal ID"]);
+      }
+    });
 
     return el;
   }
@@ -268,6 +398,7 @@
   function populateFilters() {
     const fill = (id, values) => {
       const sel = $(id);
+      if (!sel) return;
       const current = sel.value;
       while (sel.options.length > 1) sel.remove(1);
       values.forEach((v) => {
@@ -282,7 +413,6 @@
     fill("#filter-category", uniqueValues("Deal Category"));
     fill("#filter-state", uniqueValues("State"));
     fill("#filter-waiting", uniqueValues("Waiting On"));
-    fill("#filter-assigned", uniqueValues("Assigned To"));
   }
 
   function matchesFilters(card) {
@@ -290,19 +420,17 @@
     const fc = $("#filter-category").value;
     const fs = $("#filter-state").value;
     const fw = $("#filter-waiting").value;
-    const fa = $("#filter-assigned").value;
     if (fp && card.dataset.priority !== fp) return false;
     if (fc && card.dataset.category !== fc) return false;
     if (fs && card.dataset.state !== fs) return false;
     if (fw && card.dataset.waiting !== fw) return false;
-    if (fa && card.dataset.assigned !== fa) return false;
     return true;
   }
 
   function syncFilterActiveState() {
-    ["#filter-priority", "#filter-category", "#filter-state", "#filter-waiting", "#filter-assigned"].forEach((id) => {
+    ["#filter-priority", "#filter-category", "#filter-state", "#filter-waiting"].forEach((id) => {
       const sel = $(id);
-      sel.classList.toggle("is-active", Boolean(sel.value));
+      if (sel) sel.classList.toggle("is-active", Boolean(sel.value));
     });
   }
 
@@ -340,7 +468,7 @@
     const name = top["Practice Name"];
     const rev = fmtMoney(top["Revenue"]);
     const stage = getStage(top);
-    const next = top["Next Action"] || "no next action set";
+    const next = getNextAction(top) || "no next action set";
     return `<span class="hottest-kicker">Hottest deal</span> <strong>${escapeHtml(name)}</strong> · ${rev} rev · ${escapeHtml(stage)} — ${escapeHtml(next)}`;
   }
 
@@ -397,31 +525,260 @@
 
     $("#deal-count").textContent = `${deals.length} deals`;
     applyFilters();
+    initSortables();
+    updateSavedChip();
   }
 
   function initSortables() {
-    /* Drag temporarily disabled — Sortable was intercepting listing clicks. */
+    if (typeof Sortable === "undefined") return;
+    document.querySelectorAll(".column-cards").forEach((list) => {
+      if (list._sortable) {
+        list._sortable.destroy();
+        list._sortable = null;
+      }
+      list._sortable = Sortable.create(list, {
+        group: "solitaire-deals",
+        animation: 150,
+        handle: ".card-drag",
+        draggable: ".card",
+        filter: "a, .btn-copy-link, .btn-listing",
+        preventOnFilter: false,
+        ghostClass: "sortable-ghost",
+        chosenClass: "sortable-chosen",
+        onAdd(evt) {
+          const card = evt.item;
+          const dealId = card.dataset.dealId;
+          const stage = evt.to.dataset.stage;
+          if (dealId && stage) {
+            setStage(dealId, stage);
+            updateColumnCounts();
+            updateBanner();
+            if (openDealId === dealId) {
+              const sel = $("#drawer-stage");
+              if (sel) sel.value = stage;
+            }
+          }
+        },
+        onUpdate() {
+          updateColumnCounts();
+        },
+      });
+    });
   }
 
+  /* —— Drawer —— */
+  function openDrawer(dealId) {
+    const deal = findDeal(dealId);
+    if (!deal) return;
+    openDealId = dealId;
+    const drawer = $("#deal-drawer");
+    const backdrop = $("#drawer-backdrop");
+
+    $("#drawer-title").textContent = deal["Practice Name"] || "Untitled";
+    $("#drawer-deal-id").textContent = dealId;
+
+    const stageSel = $("#drawer-stage");
+    stageSel.innerHTML = "";
+    COLUMNS.forEach((s) => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      stageSel.appendChild(opt);
+    });
+    stageSel.value = getStage(deal);
+
+    const { moneyLabel, moneyVal } = moneyFacts(deal);
+    const brokerName = (deal["Broker Name"] || "").trim() || "—";
+    const brokerPhone = (deal["Broker Phone"] || "").trim();
+    $("#drawer-facts").innerHTML = `
+      <div class="fact-cell"><span class="fact-label">State</span><span class="fact-value">${escapeHtml((deal["State"] || "").trim() || "—")}</span></div>
+      <div class="fact-cell"><span class="fact-label">Revenue</span><span class="fact-value">${fmtMoney(deal["Revenue"])}</span></div>
+      <div class="fact-cell"><span class="fact-label">${escapeHtml(moneyLabel)}</span><span class="fact-value">${moneyVal}</span></div>
+      <div class="fact-cell"><span class="fact-label">Broker</span><span class="fact-value">${escapeHtml(brokerName)}${brokerPhone ? " · " + escapeHtml(brokerPhone) : ""}</span></div>
+    `;
+
+    const listing = listingUrl(deal);
+    const actions = $("#drawer-listing-actions");
+    const brokerBig = $("#drawer-broker-big");
+    if (listing) {
+      actions.innerHTML = `
+        <a class="btn-listing drawer-open-listing" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">Open listing ↗</a>
+        <button type="button" class="btn-copy-link" id="drawer-copy-link">Copy link</button>
+      `;
+      brokerBig.hidden = true;
+      brokerBig.innerHTML = "";
+      const copyBtn = $("#drawer-copy-link");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", () => {
+          copyText(listing).then((ok) => {
+            copyBtn.textContent = ok ? "Copied" : "Copy failed";
+            setTimeout(() => {
+              copyBtn.textContent = "Copy link";
+            }, 1200);
+          });
+        });
+      }
+    } else {
+      actions.innerHTML = `<span class="btn-listing disabled">No listing link</span>`;
+      brokerBig.hidden = false;
+      brokerBig.innerHTML = `
+        <div class="broker-missing-label">Call the broker</div>
+        <div class="broker-name-big">${escapeHtml(brokerName)}</div>
+        ${brokerPhone ? `<div class="broker-phone-big">${escapeHtml(brokerPhone)}</div>` : ""}
+      `;
+    }
+
+    $("#drawer-next-action").value = getNextAction(deal);
+    $("#drawer-next-due").value = getNextDue(deal);
+    $("#drawer-notes").value = getNotes(deal);
+
+    drawer.classList.add("is-open");
+    drawer.setAttribute("aria-hidden", "false");
+    backdrop.hidden = false;
+    document.body.classList.add("drawer-open");
+  }
+
+  function closeDrawer() {
+    openDealId = null;
+    const drawer = $("#deal-drawer");
+    const backdrop = $("#drawer-backdrop");
+    drawer.classList.remove("is-open");
+    drawer.setAttribute("aria-hidden", "true");
+    backdrop.hidden = true;
+    document.body.classList.remove("drawer-open");
+  }
+
+  function scheduleFieldSave(fn) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      fn();
+      persistOverrides();
+      // Refresh card content for open deal without full board rebuild when possible
+      refreshOpenCard();
+      updateBanner();
+    }, SAVE_DEBOUNCE_MS);
+  }
+
+  function refreshOpenCard() {
+    if (!openDealId) return;
+    const deal = findDeal(openDealId);
+    if (!deal) return;
+    const existing = document.querySelector(`.card[data-deal-id="${CSS.escape(openDealId)}"]`);
+    if (!existing) return;
+    const parent = existing.parentElement;
+    const next = createCard(deal);
+    if (existing.classList.contains("hidden")) next.classList.add("hidden");
+    parent.replaceChild(next, existing);
+  }
+
+  function wireDrawer() {
+    $("#drawer-close").addEventListener("click", closeDrawer);
+    $("#drawer-backdrop").addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && openDealId) closeDrawer();
+    });
+
+    $("#drawer-stage").addEventListener("change", () => {
+      if (!openDealId) return;
+      const stage = $("#drawer-stage").value;
+      setStage(openDealId, stage);
+      // Move card to new column
+      renderBoard();
+      updateBanner();
+      // Keep drawer open on same deal
+      openDrawer(openDealId);
+    });
+
+    $("#drawer-next-action").addEventListener("input", () => {
+      if (!openDealId) return;
+      const val = $("#drawer-next-action").value;
+      scheduleFieldSave(() => {
+        overrides.nextAction[openDealId] = val;
+      });
+    });
+
+    $("#drawer-next-due").addEventListener("change", () => {
+      if (!openDealId) return;
+      const val = $("#drawer-next-due").value;
+      scheduleFieldSave(() => {
+        overrides.nextDue[openDealId] = val;
+      });
+    });
+    $("#drawer-next-due").addEventListener("input", () => {
+      if (!openDealId) return;
+      const val = $("#drawer-next-due").value;
+      scheduleFieldSave(() => {
+        overrides.nextDue[openDealId] = val;
+      });
+    });
+
+    $("#drawer-notes").addEventListener("input", () => {
+      if (!openDealId) return;
+      const val = $("#drawer-notes").value;
+      scheduleFieldSave(() => {
+        overrides.notes[openDealId] = val;
+      });
+    });
+  }
+
+  function downloadBackup() {
+    const merged = deals.map((d) => {
+      const id = d["Deal ID"];
+      return {
+        ...d,
+        "Current Kanban Stage": getStage(d),
+        "Next Action": getNextAction(d),
+        "Next Action Due Date": getNextDue(d) || d["Next Action Due Date"] || "",
+        "Most Recent Note": getNotes(d),
+        _listingUrl: listingUrl(d),
+        _overrides: {
+          stage: overrides.stages[id] || null,
+          notes: Object.prototype.hasOwnProperty.call(overrides.notes, id) ? overrides.notes[id] : null,
+          nextAction: Object.prototype.hasOwnProperty.call(overrides.nextAction, id)
+            ? overrides.nextAction[id]
+            : null,
+          nextDue: Object.prototype.hasOwnProperty.call(overrides.nextDue, id) ? overrides.nextDue[id] : null,
+          listingUrl: overrides.listingUrl[id] || null,
+        },
+      };
+    });
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      storageKey: STORAGE_KEY,
+      overrides,
+      deals: merged,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+    a.href = url;
+    a.download = `solitaire-workspace-backup-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
 
   function wireFilters() {
-    ["#filter-priority", "#filter-category", "#filter-state", "#filter-waiting", "#filter-assigned"].forEach(
-      (id) => $(id).addEventListener("change", applyFilters)
+    ["#filter-priority", "#filter-category", "#filter-state", "#filter-waiting"].forEach((id) =>
+      $(id).addEventListener("change", applyFilters)
     );
     $("#clear-filters").addEventListener("click", () => {
-      ["#filter-priority", "#filter-category", "#filter-state", "#filter-waiting", "#filter-assigned"].forEach(
-        (id) => {
-          $(id).value = "";
-        }
-      );
+      ["#filter-priority", "#filter-category", "#filter-state", "#filter-waiting"].forEach((id) => {
+        $(id).value = "";
+      });
       applyFilters();
     });
     $("#reset-stages").addEventListener("click", () => {
-      stageOverrides = {};
-      saveOverrides();
+      if (!confirm("Clear all workspace overrides (stages, notes, next actions) on this device?")) return;
+      overrides = emptyOverrides();
+      persistOverrides();
+      closeDrawer();
       renderBoard();
       updateBanner();
     });
+    $("#download-backup").addEventListener("click", downloadBackup);
   }
 
   async function boot() {
@@ -431,6 +788,7 @@
     deals = await res.json();
     populateFilters();
     wireFilters();
+    wireDrawer();
     renderBoard();
     updateBanner();
   }

@@ -11,9 +11,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260917f" />
-  <!-- Sortable temporarily removed: was blocking listing link clicks -->
-  <script src="app.js?v=20260917f" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20260917g" />
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="app.js?v=20260917g" defer></script>
 </head>
 <body>
   <div class="app">
@@ -28,7 +28,9 @@
       </div>
       <div class="topbar-meta">
         <span id="deal-count" class="meta-chip">— deals</span>
-        <button type="button" id="reset-stages" class="btn-ghost" title="Clear saved stage overrides">Reset stages</button>
+        <span id="saved-chip" class="meta-chip saved-chip" hidden>Saved on this device</span>
+        <button type="button" id="download-backup" class="btn-ghost" title="Download workspace backup JSON">Download workspace backup</button>
+        <button type="button" id="reset-stages" class="btn-ghost" title="Clear saved workspace overrides">Reset workspace</button>
       </div>
     </header>
 
@@ -72,12 +74,6 @@
           <option value="">All</option>
         </select>
       </label>
-      <label>
-        Assigned To
-        <select id="filter-assigned">
-          <option value="">All</option>
-        </select>
-      </label>
       <button type="button" id="clear-filters" class="btn-ghost">Clear</button>
     </section>
 
@@ -86,8 +82,40 @@
     </main>
 
     <footer class="footer">
-      <span>Stages persist in localStorage · Seed: deals.json</span>
+      <span>Workspace saves on this device · Seed: deals.json</span>
     </footer>
   </div>
+
+  <!-- Detail drawer -->
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="deal-drawer" class="deal-drawer" aria-hidden="true" role="dialog" aria-labelledby="drawer-title">
+    <header class="drawer-header">
+      <h2 id="drawer-title" class="drawer-title">Deal</h2>
+      <button type="button" id="drawer-close" class="btn-ghost drawer-close" aria-label="Close">Close</button>
+    </header>
+    <div class="drawer-body">
+      <label class="drawer-field">
+        <span class="drawer-label">Stage</span>
+        <select id="drawer-stage"></select>
+      </label>
+      <div class="drawer-facts fact-grid" id="drawer-facts"></div>
+      <div class="drawer-listing-actions" id="drawer-listing-actions"></div>
+      <div class="drawer-broker-big" id="drawer-broker-big" hidden></div>
+      <label class="drawer-field">
+        <span class="drawer-label">Next Action</span>
+        <textarea id="drawer-next-action" rows="3" placeholder="What to do next…"></textarea>
+      </label>
+      <label class="drawer-field">
+        <span class="drawer-label">Next Action Due Date</span>
+        <input type="date" id="drawer-next-due" />
+      </label>
+      <label class="drawer-field">
+        <span class="drawer-label">Notes</span>
+        <textarea id="drawer-notes" rows="8" placeholder="Most recent note / full notes log…"></textarea>
+      </label>
+      <p class="drawer-hint">Edits save automatically on this device.</p>
+      <p class="drawer-id" id="drawer-deal-id"></p>
+    </div>
+  </aside>
 </body>
 </html>
