@@ -138,17 +138,25 @@
     return "prio-backlog";
   }
 
-  function docLink(deal) {
-    const cim = deal["CIM Google Drive Link"];
-    if (cim) return { href: cim, label: "CIM / Drive" };
-    const drive = deal["Drive Folder Link"];
-    if (drive) return { href: drive, label: "Drive folder" };
-    const src = deal["Source Document Links"] || deal["Searcher OS Deal Link"];
-    if (src) {
-      const first = String(src).split(/[\s,]+/).find((s) => s.startsWith("http"));
-      if (first) return { href: first, label: "Listing / broker" };
-    }
-    return null;
+  function firstHttp(val) {
+    if (!val) return null;
+    const first = String(val)
+      .split(/[\s,]+/)
+      .find((s) => /^https?:\/\//i.test(s));
+    return first || null;
+  }
+
+  /** Original marketplace / broker listing (BizBuySell, etc.) */
+  function listingUrl(deal) {
+    return (
+      firstHttp(deal["Searcher OS Deal Link"]) ||
+      firstHttp(deal["Source Document Links"]) ||
+      null
+    );
+  }
+
+  function driveUrl(deal) {
+    return firstHttp(deal["CIM Google Drive Link"]) || firstHttp(deal["Drive Folder Link"]) || null;
   }
 
   function brokerLine(deal) {
@@ -181,7 +189,8 @@
     const el = document.createElement("article");
     const tier = deal["Priority Tier"] || "Backlog";
     const waiting = deal["Waiting On"] || "";
-    const link = docLink(deal);
+    const listing = listingUrl(deal);
+    const drive = driveUrl(deal);
     const due = deal["Next Action Due Date"];
     const overdue = isOverdue(due);
     const ebitda = deal["EBITDA"] ?? deal["Adjusted EBITDA"];
@@ -196,9 +205,12 @@
     el.dataset.assigned = deal["Assigned To"] || "";
     el.setAttribute("role", "listitem");
 
-    const linkHtml = link
-      ? `<a class="card-link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">↗ ${escapeHtml(link.label)}</a>`
-      : `<span class="card-row"><span class="label">Docs</span><span class="value muted">None</span></span>`;
+    const listingHtml = listing
+      ? `<a class="card-link listing" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">↗ Open listing</a>`
+      : `<span class="card-row"><span class="label">Listing</span><span class="value muted">No link on file</span></span>`;
+    const driveHtml = drive
+      ? `<a class="card-link drive" href="${escapeHtml(drive)}" target="_blank" rel="noopener noreferrer">↗ Drive folder</a>`
+      : "";
 
     // Always 2-col Revenue | SDE; EBITDA as 3rd column when present (never collapse SDE)
     const hasEbitda = ebitda != null && ebitda !== "";
@@ -239,7 +251,8 @@
         <span class="label">Last action</span>
         <span class="value muted">${escapeHtml(deal["Last Action"] || "—")} · ${fmtShortDate(deal["Last Action Date"])}</span>
       </div>
-      ${linkHtml}
+      ${listingHtml}
+      ${driveHtml}
       <div class="card-row">
         <span class="label">Next</span>
         <span class="value ${overdue ? "overdue" : ""}">${escapeHtml(deal["Next Action"] || "—")}${due ? " · due " + fmtShortDate(due) : ""}${overdue ? " · Overdue" : ""}</span>
@@ -250,6 +263,30 @@
       </div>
       <div class="card-id">${escapeHtml(deal["Deal ID"])}</div>
     `;
+
+    // Click opens original listing (drag still moves the card)
+    if (listing) {
+      el.dataset.listingUrl = listing;
+      el.classList.add("has-listing");
+      el.title = "Click to open listing · drag to move";
+      let downX = 0;
+      let downY = 0;
+      let dragging = false;
+      el.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0) return;
+        downX = e.clientX;
+        downY = e.clientY;
+        dragging = false;
+      });
+      el.addEventListener("pointermove", (e) => {
+        if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) dragging = true;
+      });
+      el.addEventListener("click", (e) => {
+        if (e.target.closest("a")) return; // link handles itself
+        if (dragging) return;
+        window.open(listing, "_blank", "noopener,noreferrer");
+      });
+    }
 
     return el;
   }
