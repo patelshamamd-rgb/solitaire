@@ -209,45 +209,28 @@
       ? `<a class="card-link drive" href="${escapeHtml(drive)}" target="_blank" rel="noopener noreferrer">↗ Drive folder</a>`
       : "";
 
-    // Always 2-col Revenue | SDE; EBITDA as 3rd column when present (never collapse SDE)
     const hasEbitda = ebitda != null && ebitda !== "";
-    const metricsClass = hasEbitda ? "card-metrics metrics-3" : "card-metrics";
-    const ebitdaMetric = hasEbitda
-      ? `<div class="metric"><span class="label">EBITDA</span><span class="value">${fmtMoney(ebitda)}</span></div>`
-      : "";
-
     const moneyLabel = hasEbitda ? "EBITDA" : "SDE";
     const moneyVal = hasEbitda ? fmtMoney(ebitda) : fmtMoney(sde);
     const brokerName = (deal["Broker Name"] || "").trim() || "—";
     const state = (deal["State"] || "").trim() || "—";
 
     const titleHtml = listing
-      ? `<a class="card-name-link" href="${escapeHtml(listing)}" data-listing-url="${escapeHtml(listing)}"><h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3></a>`
+      ? `<h3 class="card-name"><a class="card-name-link" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">${escapeHtml(deal["Practice Name"] || "Untitled")}</a></h3>`
       : `<h3 class="card-name">${escapeHtml(deal["Practice Name"] || "Untitled")}</h3>`;
 
     const openListingBtn = listing
-      ? `<a class="btn-listing" href="${escapeHtml(listing)}" data-listing-url="${escapeHtml(listing)}">Open listing ↗</a>`
+      ? `<a class="btn-listing" href="${escapeHtml(listing)}" target="_blank" rel="noopener noreferrer">Open listing ↗</a>`
       : `<span class="btn-listing disabled">No listing link</span>`;
 
     el.innerHTML = `
       ${titleHtml}
       ${openListingBtn}
-      <div class="pill-row">
-        <span class="pill fact state" title="State">${escapeHtml(state)}</span>
-        <span class="pill fact money" title="Revenue">Rev ${fmtMoney(deal["Revenue"])}</span>
-        <span class="pill fact money" title="${moneyLabel}">${escapeHtml(moneyLabel)} ${moneyVal}</span>
-        <span class="pill fact broker" title="Broker">${escapeHtml(brokerName)}</span>
-      </div>
-      <div class="${metricsClass}">
-        <div class="metric">
-          <span class="label">Revenue</span>
-          <span class="value">${fmtMoney(deal["Revenue"])}</span>
-        </div>
-        <div class="metric">
-          <span class="label">SDE</span>
-          <span class="value">${fmtMoney(sde)}</span>
-        </div>
-        ${ebitdaMetric}
+      <div class="fact-grid">
+        <div class="fact-cell"><span class="fact-label">State</span><span class="fact-value">${escapeHtml(state)}</span></div>
+        <div class="fact-cell"><span class="fact-label">Revenue</span><span class="fact-value">${fmtMoney(deal["Revenue"])}</span></div>
+        <div class="fact-cell"><span class="fact-label">${escapeHtml(moneyLabel)}</span><span class="fact-value">${moneyVal}</span></div>
+        <div class="fact-cell"><span class="fact-label">Broker</span><span class="fact-value">${escapeHtml(brokerName)}</span></div>
       </div>
       <div class="card-row">
         <span class="label">Sub-label</span>
@@ -269,18 +252,6 @@
       <div class="card-id">${escapeHtml(deal["Deal ID"])}</div>
     `;
 
-    el.querySelectorAll("[data-listing-url]").forEach((a) => {
-      a.addEventListener("click", (e) => {
-        const url = a.getAttribute("data-listing-url") || a.getAttribute("href");
-        if (!url) return;
-        e.preventDefault();
-        const win = window.open(url, "_blank", "noopener,noreferrer");
-        if (!win) {
-          // Popup blocked (common in embedded browsers) — go same tab
-          window.location.assign(url);
-        }
-      });
-    });
 
     return el;
   }
