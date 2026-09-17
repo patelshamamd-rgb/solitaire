@@ -1138,3 +1138,13 @@ body.drawer-open {
 .drawer-facts {
   margin: 0;
 }
+
+.broker-email, .broker-email-big a {
+  color: var(--accent, #6b5b4b);
+  text-decoration: none;
+  font-size: 0.85em;
+  word-break: break-all;
+}
+.broker-email:hover, .broker-email-big a:hover { text-decoration: underline; }
+.fact-broker .fact-value { line-height: 1.35; }
+.broker-email-big { margin-top: 0.25rem; font-size: 0.95rem; }

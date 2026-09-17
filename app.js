@@ -285,6 +285,7 @@
     const { moneyLabel, moneyVal } = moneyFacts(deal);
     const brokerName = (deal["Broker Name"] || "").trim() || "—";
     const brokerPhone = (deal["Broker Phone"] || "").trim();
+    const brokerEmail = (deal["Broker Email"] || "").trim();
     const state = (deal["State"] || "").trim() || "—";
 
     el.className = `card ${priorityClass(tier)}`;
@@ -311,11 +312,13 @@
         </div>`;
     } else {
       const phoneLine = brokerPhone ? `<div class="broker-phone-big">${escapeHtml(brokerPhone)}</div>` : "";
+      const emailLine = brokerEmail ? `<div class="broker-email-big"><a href="mailto:${escapeHtml(brokerEmail)}">${escapeHtml(brokerEmail)}</a></div>` : "";
       listingBlock = `
         <div class="broker-missing">
           <div class="broker-missing-label">No listing link — call broker</div>
           <div class="broker-name-big">${escapeHtml(brokerName)}</div>
           ${phoneLine}
+          ${emailLine}
         </div>`;
     }
 
@@ -329,7 +332,7 @@
         <div class="fact-cell"><span class="fact-label">State</span><span class="fact-value">${escapeHtml(state)}</span></div>
         <div class="fact-cell"><span class="fact-label">Revenue</span><span class="fact-value">${fmtMoney(deal["Revenue"])}</span></div>
         <div class="fact-cell"><span class="fact-label">${escapeHtml(moneyLabel)}</span><span class="fact-value">${moneyVal}</span></div>
-        <div class="fact-cell"><span class="fact-label">Broker</span><span class="fact-value">${escapeHtml(brokerName)}${brokerPhone ? " · " + escapeHtml(brokerPhone) : ""}</span></div>
+        <div class="fact-cell fact-broker"><span class="fact-label">Broker</span><span class="fact-value">${escapeHtml(brokerName)}${brokerPhone ? " · " + escapeHtml(brokerPhone) : ""}${brokerEmail ? `<br><a class="broker-email" href="mailto:${escapeHtml(brokerEmail)}">${escapeHtml(brokerEmail)}</a>` : ""}</span></div>
       </div>
       <div class="card-row">
         <span class="label">Sub-label</span>
@@ -590,11 +593,12 @@
     const { moneyLabel, moneyVal } = moneyFacts(deal);
     const brokerName = (deal["Broker Name"] || "").trim() || "—";
     const brokerPhone = (deal["Broker Phone"] || "").trim();
+    const brokerEmail = (deal["Broker Email"] || "").trim();
     $("#drawer-facts").innerHTML = `
       <div class="fact-cell"><span class="fact-label">State</span><span class="fact-value">${escapeHtml((deal["State"] || "").trim() || "—")}</span></div>
       <div class="fact-cell"><span class="fact-label">Revenue</span><span class="fact-value">${fmtMoney(deal["Revenue"])}</span></div>
       <div class="fact-cell"><span class="fact-label">${escapeHtml(moneyLabel)}</span><span class="fact-value">${moneyVal}</span></div>
-      <div class="fact-cell"><span class="fact-label">Broker</span><span class="fact-value">${escapeHtml(brokerName)}${brokerPhone ? " · " + escapeHtml(brokerPhone) : ""}</span></div>
+      <div class="fact-cell fact-broker"><span class="fact-label">Broker</span><span class="fact-value">${escapeHtml(brokerName)}${brokerPhone ? " · " + escapeHtml(brokerPhone) : ""}${brokerEmail ? `<br><a class="broker-email" href="mailto:${escapeHtml(brokerEmail)}">${escapeHtml(brokerEmail)}</a>` : ""}</span></div>
     `;
 
     const listing = listingUrl(deal);
@@ -625,6 +629,7 @@
         <div class="broker-missing-label">Call the broker</div>
         <div class="broker-name-big">${escapeHtml(brokerName)}</div>
         ${brokerPhone ? `<div class="broker-phone-big">${escapeHtml(brokerPhone)}</div>` : ""}
+        ${brokerEmail ? `<div class="broker-email-big"><a href="mailto:${escapeHtml(brokerEmail)}">${escapeHtml(brokerEmail)}</a></div>` : ""}
       `;
     }
 
@@ -783,7 +788,7 @@
 
   async function boot() {
     loadOverrides();
-    const res = await fetch("deals.json");
+    const res = await fetch("deals.json?v=20260917i");
     if (!res.ok) throw new Error("Failed to load deals.json");
     deals = await res.json();
     populateFilters();
