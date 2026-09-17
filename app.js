@@ -788,7 +788,7 @@
 
   async function boot() {
     loadOverrides();
-    const res = await fetch("deals.json?v=20260917i");
+    const res = await fetch("deals.json?v=20260917j");
     if (!res.ok) throw new Error("Failed to load deals.json");
     deals = await res.json();
     populateFilters();
