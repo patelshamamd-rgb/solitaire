@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solitaire — Deal Room</title>
+  <meta name="description" content="Solitaire healthcare acquisition kanban — quiet luxury deal room." />
+  <meta name="theme-color" content="#f3f1ec" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <div class="ambient" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="brand">
+        <img src="favicon.svg" alt="" class="brand-mark" width="28" height="28" />
+        <div class="brand-text">
+          <h1 class="wordmark">Solitaire</h1>
+          <p class="tagline">Deal room · Healthcare acquisitions</p>
+        </div>
+      </div>
+      <div class="topbar-meta">
+        <span id="deal-count" class="meta-chip">— deals</span>
+        <button type="button" id="reset-stages" class="btn-ghost" title="Clear saved stage overrides">Reset stages</button>
+      </div>
+    </header>
+
+    <section class="daily-banner" id="daily-banner" aria-live="polite">
+      <div class="banner-date" id="banner-date">—</div>
+      <div class="banner-stats">
+        <div class="stat">
+          <span class="stat-label">Waiting on me</span>
+          <span class="stat-value waiting-me" id="stat-waiting-me">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Untouched 7+ days</span>
+          <span class="stat-value untouched" id="stat-untouched">0</span>
+        </div>
+      </div>
+      <p class="hottest" id="hottest-deal">—</p>
+    </section>
+
+    <section class="filters" id="filters">
+      <label>
+        Priority
+        <select id="filter-priority">
+          <option value="">All</option>
+        </select>
+      </label>
+      <label>
+        Category
+        <select id="filter-category">
+          <option value="">All</option>
+        </select>
+      </label>
+      <label>
+        State
+        <select id="filter-state">
+          <option value="">All</option>
+        </select>
+      </label>
+      <label>
+        Waiting On
+        <select id="filter-waiting">
+          <option value="">All</option>
+        </select>
+      </label>
+      <label>
+        Assigned To
+        <select id="filter-assigned">
+          <option value="">All</option>
+        </select>
+      </label>
+      <button type="button" id="clear-filters" class="btn-ghost">Clear</button>
+    </section>
+
+    <main class="board-wrap">
+      <div class="board" id="board" role="list"></div>
+    </main>
+
+    <footer class="footer">
+      <span>Stages persist in localStorage · Seed: deals.json</span>
+    </footer>
+  </div>
+</body>
+</html>
