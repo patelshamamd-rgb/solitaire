@@ -6305,7 +6305,7 @@
     "Priority Tier": "Active",
     "Buy Box Score": null,
     "Preferred State Point Awarded": null,
-    "Current Kanban Stage": "New / Reviewing Teaser",
+    "Current Kanban Stage": "NDA Requested",
     "Sub-Stage Label": null,
     "Stage Entered Date": "2026-09-17T00:00:00",
     "Broker Name": "Todd Bell",
@@ -6320,7 +6320,7 @@
     "Next Action Due": null,
     "Drive Folder Link": null,
     "Source Document Links": "https://joinaccredited.com/deals/turnkey-outpatient-behavioral-health-provider-los-angeles-county-ca | dead BBS https://www.bizbuysell.com/business-opportunity/turnkey-outpatient-behavioral-health-provider-2m-revenue/2544361/ | dead BizBen https://www.bizben.com/business-for-sale/turnkey-outpatient-behavioral-health-provider-2m-revenue-scalable-growth-7564029 | BBN unavailable https://www.businessbroker.net/business-for-sale/outpatient-behavioral-health-provider-los-angeles-california/1015962.aspx",
-    "Notes / Next Action": "2026-09-17: BBS listing 404; swapped to live BizBen twin (same Todd Bell / ~$2.28M rev / $4M ask). Pending Day-0 form on new link.\n2026-09-18: Live twin hunt \u2014 BBS 2544361 dead (residential Apify scrape 0 items); BizBen 7564029 soft-redirects to LA Medical Practice category; BusinessBroker.net 1015962 loads but banner says listing no longer available / new owner. Found LIVE twin on Accredited (same BBS ID 2544361, ~$2.28M rev / $751K SDE / $4M ask, LA County PHP-IOP): https://joinaccredited.com/deals/turnkey-outpatient-behavioral-health-provider-los-angeles-county-ca. Day-0 inquiry NOT submitted \u2014 page is signup-gated (no public NDA/inquiry form; broker contact behind free account). Did not email Todd. Deal kept alive."
+    "Notes / Next Action": "2026-09-17: BBS listing 404; swapped to live BizBen twin (same Todd Bell / ~$2.28M rev / $4M ask). Pending Day-0 form on new link.\n2026-09-18: Live twin hunt \u2014 BBS 2544361 dead (residential Apify scrape 0 items); BizBen 7564029 soft-redirects to LA Medical Practice category; BusinessBroker.net 1015962 loads but banner says listing no longer available / new owner. Found LIVE twin on Accredited (same BBS ID 2544361, ~$2.28M rev / $751K SDE / $4M ask, LA County PHP-IOP): https://joinaccredited.com/deals/turnkey-outpatient-behavioral-health-provider-los-angeles-county-ca. Day-0 inquiry NOT submitted \u2014 page is signup-gated (no public NDA/inquiry form; broker contact behind free account). Did not email Todd. Deal kept alive.\n2026-09-18: Day-0 NDA email sent to toddbell@sdbiz.com (listing forms dead/signup-gated; live twin on Accredited). Awaiting NDA."
   },
   {
     "Deal ID": "SOL-0116",
