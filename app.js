@@ -3,6 +3,7 @@
 
   const COLUMNS = [
     "New / Reviewing Teaser",
+    "Interested – DealStream",
     "NDA Signed",
     "CIM Received",
     "Management Call Scheduled",
