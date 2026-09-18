@@ -1,25 +1,24 @@
 # Solitaire sync report
 
-**Pass:** 2026-09-17l (gated BBS broker hunt)
+**Pass:** 2026-09-17m (gated BBS web-fetch + abotapi scraper)
 **Actor:** Shama Patel / patelshamamd@gmail.com
-**Cache bust:** `?v=20260917l`
+**Cache bust:** `?v=20260917m`
+**Live:** https://patelshamamd-rgb.github.io/solitaire/?v=20260917m
 
 ## Broker fills this pass (email+phone)
 | SOL | Deal | Broker | Email | Phone | Source |
 |-----|------|--------|-------|-------|--------|
-| SOL-0115 | Turnkey Outpatient BH Provider $2M+ | Todd Bell | toddbell@sdbiz.com | (415) 846-7267 | BizBen + sdbiz.com |
-| SOL-0116 | Well Established BH & Psych Services | Synergy Business Brokers | mark@synergybb.com | 254-274-6930 | Twin SOL-0021 / BBS 2524010 |
-| SOL-0042 (twin of ac5ffff0) | Highly Profitable Turn-key MH AZ | Bryan Vitagliano | bryan@strategicbbgroup.com | (480) 390-4289 | businessbroker.net 997091 |
-| SOL-0119 / SOL-0069 | Growing Mental Healthcare Provider | Shawn Ilg | silg@entegrabusiness.com | (402) 598-4002 | BizQuest BW2387929 + entegrabusiness.com |
+| SOL-0118 | Immigration MH NY | Daniel Cohen (Northeastern Advisors) | info@northeasternadvisors.com | 551-277-5323 | BBS 2456906 + profile 44122 + firm contact page |
+| SOL-0117 | Established BH NV | Rei Robinett (M&A Business Advisors) | rei@mabusinessadvisors.com | 775-204-8252 | BBS 2491369 + reirobinett.com |
+| SOL-0120 | Women's Health & Wellness TN | Dave Godwin (CBI Team) | dave.godwin@cbiteam.com | 479-332-3649 | BBS 2355317 + cbiteam.com + IBBA |
 
-## Still missing after alternate-listing hunt
-- SOL-0114 Outpatient BH in-network MO — no broker on mirrors
-- SOL-0117 Established BH NV — no broker
-- SOL-0118 Immigration MH NY — no broker
-- SOL-0120 Women's Health & Wellness TN — no broker
-- SOL-0141 Growing MH $800k Marc Rosenberg — name only (no verified email/phone; CPA marc@rosenbergassoc.com is a different person — not used)
+## Still missing after this pass
+- SOL-0114 Outpatient BH in-network MO — BBS Listed By **Not Disclosed** (scraper + web-fetch); no phone/email
+- SOL-0141 Growing MH $800k Marc Rosenberg — name only; CPA marc@rosenbergassoc.com is different person — not used; listing fetch failed this pass
 - SOL-0035 Thriving MH Diana Jane — phone (681) 201-4890 only; no public email
 
 ## Notes
-- BBS pages still 500/403 from box; used BizBen, businessbroker.net, BizQuest twins, firm sites.
+- Scraper runId zojkjylmQx5xdBSKf / dataset knkotkGIYfQxVEjbd: 3 items (2545361 Not Disclosed; 2491369 phone+profile; 2456906 phone+profile).
+- Daniel Cohen profile also shows (646) 474-9698; listing voice line kept as primary Broker Phone.
+- Rei also publishes cell (775) 200-5799 on reirobinett.com; Dave cell 479-263-7330 on cbiteam.com.
 - No emails invented. No outreach sent.
