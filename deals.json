@@ -1002,7 +1002,8 @@
     "Last Action Date": "2026-09-17T00:00:00",
     "Created At": "2026-09-17T00:00:00",
     "Updated At": "2026-09-17T00:00:00",
-    "HELPER NOTE": "Preferred-state Buy Box point is NOT being awarded until preferred states are set. Column AD (Preferred State Point Awarded) = \"No \u2014 preferred states unset\". Score component = +0."
+    "HELPER NOTE": "Preferred-state Buy Box point is NOT being awarded until preferred states are set. Column AD (Preferred State Point Awarded) = \"No \u2014 preferred states unset\". Score component = +0.",
+    "Notes / Next Action": "2026-09-17: BBS listing 404. Fresher public listing not found yet (searched BBS/BizQuest/web/Sailfish). Keep alive; next: broker email raj@sailfishequityadvisors.com or phone 850-812-4323 for NDA."
   },
   {
     "Deal ID": "SOL-0021",
@@ -6005,7 +6006,7 @@
     "Priority Tier": "Active",
     "Buy Box Score": null,
     "Preferred State Point Awarded": null,
-    "Current Kanban Stage": "NDA Requested",
+    "Current Kanban Stage": "NDA Signed",
     "Sub-Stage Label": null,
     "Stage Entered Date": "2026-09-17T00:00:00",
     "Broker Name": "Mike Krieger",
@@ -6023,7 +6024,8 @@
     "Updated At": "2026-09-17T19:55:00-04:00",
     "Last Action": "Day-0 NDA form submitted",
     "Last Action Date": "2026-09-17T00:00:00",
-    "NDA Sent Date": "2026-09-17T00:00:00"
+    "NDA Sent Date": "2026-09-17T00:00:00",
+    "Notes / Next Action": "2026-09-18: Transworld Buyer NDA 0873-459790 signed via discovery.tworld.com (Portant). Address 200 2nd Ave S St Petersburg FL 33701."
   },
   {
     "Deal ID": "SOL-0110",
@@ -6275,7 +6277,7 @@
   {
     "Deal ID": "SOL-0115",
     "Searcher OS Deal ID": "917dda8d-5923-43bd-b798-ddae12233777",
-    "Searcher OS Deal Link": "https://www.bizbuysell.com/business-opportunity/turnkey-outpatient-behavioral-health-provider-2m-revenue/2544361/",
+    "Searcher OS Deal Link": "https://www.bizben.com/business-for-sale/turnkey-outpatient-behavioral-health-provider-2m-revenue-scalable-growth-7564029",
     "Practice Name": "Turnkey Outpatient Behavioral Health Provider | $2M+ Revenue",
     "State": "CA",
     "Revenue": 2278446.0,
@@ -6317,7 +6319,8 @@
     "Next Action": null,
     "Next Action Due": null,
     "Drive Folder Link": null,
-    "Source Document Links": null
+    "Source Document Links": null,
+    "Notes / Next Action": "2026-09-17: BBS listing 404; swapped to live BizBen twin (same Todd Bell / ~$2.28M rev / $4M ask). Pending Day-0 form on new link."
   },
   {
     "Deal ID": "SOL-0116",
