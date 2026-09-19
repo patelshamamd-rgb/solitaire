@@ -6801,7 +6801,7 @@
     "Priority Tier": "Active",
     "Buy Box Score": null,
     "Preferred State Point Awarded": null,
-    "Current Kanban Stage": "New / Reviewing Teaser",
+    "Current Kanban Stage": "NDA Signed",
     "Sub-Stage Label": null,
     "Stage Entered Date": "2026-09-17T00:00:00",
     "Broker Name": "Cade Beerman",
@@ -6810,15 +6810,15 @@
     "Source": "Searcher",
     "Referral Source Detail": "bizbuysell-apify",
     "Date First Seen": null,
-    "Most Recent Note": "Day-0 NDA form still blocked (Akamai via Camoufox); broker email draft prepared not sent",
-    "Full Notes Log": "Broker contact enriched 2026-09-17 ET: Cade Beerman cbeerman@tworld.com (720) 683-0843. Source: tworld.com agent page / WebSearch synthesis\n[2026-09-18 21:21 ET] Day-0 NDA form still blocked (Akamai via Camoufox); broker email draft prepared not sent",
+    "Most Recent Note": "2026-09-19: Transworld Buyer NDA 0873-707850 signed (Portant / TBA Colorado, Cade Beerman). Address 200 2nd Ave S St Petersburg FL 33701. Confirmation on discovery.tworld.com/nda-signed-typ.",
+    "Full Notes Log": "Broker contact enriched 2026-09-17 ET: Cade Beerman cbeerman@tworld.com (720) 683-0843. Source: tworld.com agent page / WebSearch synthesis\n[2026-09-18 21:21 ET] Day-0 NDA form still blocked (Akamai via Camoufox); broker email draft prepared not sent\n2026-09-19: Transworld Buyer NDA 0873-707850 signed (Portant / TBA Colorado, Cade Beerman). Address 200 2nd Ave S St Petersburg FL 33701. Confirmation on discovery.tworld.com/nda-signed-typ.",
     "Next Action": null,
     "Next Action Due": null,
     "Drive Folder Link": null,
     "Source Document Links": null,
     "Updated At": "2026-09-17T19:55:00-04:00",
-    "Last Action": "Day-0 NDA form blocked; draft prepared",
-    "Last Action Date": "2026-09-18T00:00:00"
+    "Last Action": "Buyer NDA signed",
+    "Last Action Date": "2026-09-19T16:17:40"
   },
   {
     "Deal ID": "SOL-0126",
