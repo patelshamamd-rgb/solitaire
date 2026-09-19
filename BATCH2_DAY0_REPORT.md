@@ -1,15 +1,26 @@
-# Batch2 Day-0 NDA pass (2026-09-18 morning ET)
+**Live:** https://patelshamamd-rgb.github.io/solitaire/?v=20260918212203
 
-**Live:** https://patelshamamd-rgb.github.io/solitaire/?v=20260918100226
+# Batch2+rest Day-0 NDA pass (2026-09-18 evening ET)
 
-## Counts
-- already_submitted: 1 (SOL-0116)
+Camoufox (`apify/camoufox-scraper`) approved and used with RESIDENTIAL proxy. Actor runs succeed, but **BizBuySell/BizQuest listing pages remain Akamai Access Denied** (homepage often OK; deep links denied). No public forms submitted this pass.
+
+## Batch2 counts
+- already_submitted: 1 (Well Established Behavioral Health and Psychological Services Practice — twin of earlier submit)
 - ok: 0
-- blocked (Akamai): 13 (all remaining BBS/BizQuest)
-- fail: 1 (SOL-0105 Transworld dead listing; BBS twin also blocked; broker email drafted not sent)
+- blocked: 13
+- fail: 1 (Two-Location Behavioral Health Practice — dead Transworld + blocked BBS twin)
 
-## Blocker
-Apify Firefox+RESIDENTIAL reaches BBS/BizQuest homepages but listing deep-links return Akamai Access Denied. Camoufox actor needs console permission approval: https://console.apify.com/actors/dMRHnB0XHbnV9Cifh?approvePermissions=true
+## Rest (New/Reviewing BBS extras)
+- blocked: 2 (Substance Use & BH Treatment Org; Govt Medical Exam Practice)
+- fail: 1 ($653K SDE Absentee Owner BH Platform — dead, no twin)
 
-## Draft (not sent)
-/workspace/solitaire/drafts/SOL-0105_broker_email_draft.txt → rarmstrong@tworld.com
+## Skipped
+- Todd Bell / LA turnkey Accredited deals — no public form; existing draft; left alone
+- DealStream
+- Already NDA Requested / Signed
+
+## Drafts (NOT SENT)
+All under `/workspace/solitaire/drafts/*_broker_email_draft.txt`
+
+## Next unblock path
+Manual browser submit, or broker email send from drafts once Shama approves.
