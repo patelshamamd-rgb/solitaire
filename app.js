@@ -2,7 +2,7 @@
   "use strict";
 
   const COLUMNS = [
-    "New / Reviewing Teaser",
+    "Interested",
     "Interested – DealStream",
     "NDA Requested",
     "NDA Signed",
@@ -65,6 +65,16 @@
 
   function normalizeStage(stage) {
     if (stage === "NDA Sent") return "NDA Signed";
+    // Legacy aliases for renamed first column
+    if (
+      stage === "New / Reviewing Teaser" ||
+      stage === "New/Reviewing Teaser" ||
+      stage === "New Reviewing Teaser" ||
+      stage === "New/Reviewing" ||
+      stage === "New / Reviewing"
+    ) {
+      return "Interested";
+    }
     return COLUMNS.includes(stage) ? stage : "Backlog";
   }
 
@@ -87,9 +97,9 @@
       overrides = emptyOverrides();
     }
     migrateLegacyStages(overrides);
-    // Normalize any legacy NDA Sent in stages
+    // Normalize any legacy NDA Sent / New Reviewing aliases in stages
     Object.keys(overrides.stages).forEach((id) => {
-      if (overrides.stages[id] === "NDA Sent") overrides.stages[id] = "NDA Signed";
+      overrides.stages[id] = normalizeStage(overrides.stages[id]);
     });
     persistOverrides(false);
   }

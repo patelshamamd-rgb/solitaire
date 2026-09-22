@@ -35,21 +35,24 @@ Or any static server (`npx serve`, VS Code Live Server, etc.).
 
 Relative asset paths (`styles.css`, `app.js`, `deals.json`, `favicon.svg`) work at the repo root on Pages. If you publish from a project site subdirectory other than root, keep all files together in that published folder.
 
-## Columns (11)
+## Columns
 
-1. New / Reviewing Teaser  
-2. NDA Signed  
-3. CIM Received  
-4. Management Call Scheduled  
-5. In Due Diligence  
-6. LOI Submitted  
-7. Under LOI  
-8. Closed  
-9. Dead / Passed  
-10. Backlog  
-11. Ping Later  
+1. Interested *(renamed from New / Reviewing Teaser)*  
+2. Interested – DealStream  
+3. NDA Requested  
+4. NDA Signed  
+5. CIM Received  
+6. Management Call Scheduled  
+7. In Due Diligence  
+8. LOI Submitted  
+9. Under LOI  
+10. Closed  
+11. Dead / Passed  
+12. Backlog  
+13. Ping Later  
 
 **Ping Later** is separate from **Backlog**. Denver Psychiatric Practice (`SOL-0001`) seeds into **Ping Later**.
+**Interested – DealStream** is Solitaire-only parking for DealStream leads (not the same as Interested).
 
 ## Behavior
 
