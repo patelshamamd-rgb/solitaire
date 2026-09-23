@@ -566,9 +566,9 @@
     "Priority Tier": "Hot",
     "Buy Box Score": 3,
     "Preferred State Point Awarded": "No \u2014 preferred states unset",
-    "Current Kanban Stage": "CIM Received",
-    "Sub-Stage Label": "148 days in Searcher cim_review",
-    "Stage Entered Date": "2026-04-21T00:00:00",
+    "Current Kanban Stage": "Ping Later",
+    "Sub-Stage Label": "Backlog if desperate \u2014 Uncover NY single-owner cash-pay",
+    "Stage Entered Date": "2026-09-23T14:19:59",
     "Broker Name": "Marvin Ritchie",
     "Broker Email": "marvin@archstonebrokers.com",
     "Broker Phone": "978-788-1223",
@@ -600,7 +600,8 @@
     "Last Action Date": "2026-09-17T00:00:00",
     "Created At": "2026-09-17T00:00:00",
     "Updated At": "2026-09-22T10:00:01",
-    "HELPER NOTE": "Preferred-state Buy Box point is NOT being awarded until preferred states are set. Column AD (Preferred State Point Awarded) = \"No \u2014 preferred states unset\". Score component = +0."
+    "HELPER NOTE": "Preferred-state Buy Box point is NOT being awarded until preferred states are set. Column AD (Preferred State Point Awarded) = \"No \u2014 preferred states unset\". Score component = +0.",
+    "Notes": "Backlog if desperate \u2014 single-owner cash-pay NY telehealth (Valeria CIM). Parked after CIM review 2026-09-23."
   },
   {
     "Deal ID": "SOL-0015",
